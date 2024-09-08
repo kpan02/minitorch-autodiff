@@ -48,7 +48,7 @@ class ScalarHistory:
 _var_count = 0
 
 
-@dataclass(frozen=True)
+@dataclass
 class Scalar:
     """A reimplementation of scalar values for autodifferentiation
     tracking. Scalar Variables behave as close as possible to standard
@@ -60,8 +60,8 @@ class Scalar:
     data: float
     history: Optional[ScalarHistory] = field(default_factory=ScalarHistory)
     derivative: Optional[float] = None
-    name: str = field(init=False, default="")
-    unique_id: int = field(init=False, default=0)
+    name: str = field(default="")
+    unique_id: int = field(default=0)
 
     def __post_init__(self):
         global _var_count
