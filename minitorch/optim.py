@@ -15,6 +15,7 @@ class SGD(Optimizer):
         self.lr = lr
 
     def zero_grad(self) -> None:
+        """Resets the gradients of all parameters to None."""
         for p in self.parameters:
             if p.value is None:
                 continue
@@ -26,6 +27,10 @@ class SGD(Optimizer):
                     p.value.grad = None
 
     def step(self) -> None:
+        """Performs a single optimization step.
+
+        Updates each parameter based on its gradient.
+        """
         for p in self.parameters:
             if p.value is None:
                 continue

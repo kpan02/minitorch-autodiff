@@ -112,21 +112,48 @@ class Scalar:
         return self.history is not None and self.history.last_fn is None
 
     def is_constant(self) -> bool:
+        """Check if this variable is a constant (has no history)."""
         return self.history is None
 
     @property
     def parents(self) -> Iterable[Variable]:
+        """Returns the parent variables of this variable in the computation graph."""
         assert self.history is not None
         return self.history.inputs
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+        """Applies the chain rule to compute gradients for this variable's inputs.
+
+        This method is a key part of the backpropagation algorithm. It computes
+        the gradient of the loss with respect to this variable's inputs, given
+        the gradient of the loss with respect to this variable's output.
+
+        Args:
+        ----
+            d_output (Any): The gradient of the loss with respect to this variable's output.
+
+        Returns:
+        -------
+            Iterable[Tuple[Variable, Any]]: An iterable of tuples, where each tuple
+            contains an input variable and its corresponding gradient.
+
+        """
         h = self.history
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
 
         # TODO: Implement for Task 1.3.
-        raise NotImplementedError("Need to implement for Task 1.3")
+        derivatives = h.last_fn._backward(h.ctx, d_output)
+
+        if isinstance(derivatives, (int, float)):
+            derivatives = [derivatives]
+
+        return [
+            (var, der)
+            for var, der in zip(h.inputs, derivatives)
+            if not var.is_constant()
+        ]
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """Calls autodiff to fill in the derivatives for the history of this object.
@@ -142,15 +169,53 @@ class Scalar:
         backpropagate(self, d_output)
 
     # TODO: Implement for Task 1.2.
-    raise NotImplementedError("Need to implement for Task 1.2")
+    def __lt__(self, b: ScalarLike) -> Scalar:
+        """Less than comparison."""
+        return LT.apply(self, b)
+
+    def __gt__(self, b: ScalarLike) -> Scalar:
+        """Greater than comparison."""
+        return LT.apply(b, self)
+
+    def __sub__(self, b: ScalarLike) -> Scalar:
+        """Subtraction operation."""
+        return Add.apply(self, Neg.apply(b))
+
+    def __neg__(self) -> Scalar:
+        """Negation operation."""
+        return Neg.apply(self)
+
+    def __add__(self, b: ScalarLike) -> Scalar:
+        """Addition operation."""
+        return Add.apply(self, b)
+
+    def log(self) -> Scalar:
+        """Natural logarithm."""
+        return Log.apply(self)
+
+    def exp(self) -> Scalar:
+        """Exponential function."""
+        return Exp.apply(self)
+
+    def sigmoid(self) -> Scalar:
+        """Sigmoid activation function."""
+        return Sigmoid.apply(self)
+
+    def relu(self) -> Scalar:
+        """ReLU activation function."""
+        return ReLU.apply(self)
+
+    def __eq__(self, b: ScalarLike) -> Scalar:
+        """Equality comparison."""
+        return EQ.apply(self, b)
 
 
 def derivative_check(f: Any, *scalars: Scalar) -> None:
     """Checks that autodiff works on a python function.
     Asserts False if derivative is incorrect.
 
-    Parameters
-    ----------
+    Args:
+    ----
         f : function from n-scalars to 1-scalar.
         *scalars  : n input scalar values.
 
