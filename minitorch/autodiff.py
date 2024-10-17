@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Tuple, Protocol
+from typing import Any, Iterable, Tuple, Protocol, List
 
 
 # ## Task 1.1
@@ -26,11 +26,12 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
 
     """
     # TODO: Implement for Task 1.1.
-    vals_plus = list(vals)
-    vals_minus = list(vals)
-    vals_plus[arg] += epsilon
-    vals_minus[arg] -= epsilon
-    return (f(*vals_plus) - f(*vals_minus)) / (2 * epsilon)
+    vals1 = [v for v in vals]
+    vals2 = [v for v in vals]
+    vals1[arg] = vals[arg] + epsilon
+    vals2[arg] = vals[arg] - epsilon
+    delta = f(*vals1) - f(*vals2)
+    return delta / (2 * epsilon)
 
 
 variable_count = 1
@@ -77,18 +78,21 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
 
     """
     # TODO: Implement for Task 1.4.
-    visited = set()
-    ret = []
+    order: List[Variable] = []
+    seen = set()
 
-    def visit(v: Variable) -> None:
-        if v.unique_id not in visited:
-            visited.add(v.unique_id)
-            for p in v.parents:
-                visit(p)
-            ret.append(v)
+    def visit(var: Variable) -> None:
+        if var.unique_id in seen or var.is_constant():
+            return
+        if not var.is_leaf():
+            for m in var.parents:
+                if not m.is_constant():
+                    visit(m)
+        seen.add(var.unique_id)
+        order.insert(0, var)
 
     visit(variable)
-    return reversed(ret)
+    return order
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -108,21 +112,19 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     """
     # TODO: Implement for Task 1.4.
-    order = list(topological_sort(variable))
-    derivatives = {variable.unique_id: deriv}
-
-    for var in order:
-        current_deriv = derivatives.pop(var.unique_id, None)
-
-        if current_deriv is not None:
-            if var.is_leaf():
-                var.accumulate_derivative(current_deriv)
-            else:
-                for parent, d_parent in var.chain_rule(current_deriv):
-                    if parent.unique_id in derivatives:
-                        derivatives[parent.unique_id] += d_parent
-                    else:
-                        derivatives[parent.unique_id] = d_parent
+    queue = topological_sort(variable)
+    derivatives = {}
+    derivatives[variable.unique_id] = deriv
+    for var in queue:
+        deriv = derivatives[var.unique_id]
+        if var.is_leaf():
+            var.accumulate_derivative(deriv)
+        else:
+            for v, d in var.chain_rule(deriv):
+                if v.is_constant():
+                    continue
+                derivatives.setdefault(v.unique_id, 0.0)
+                derivatives[v.unique_id] += d
 
 
 @dataclass

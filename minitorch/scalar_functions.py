@@ -121,7 +121,8 @@ class Mul(ScalarFunction):
     def forward(ctx: Context, a: float, b: float) -> float:
         """Forward pass: compute the product of inputs."""
         ctx.save_for_backward(a, b)
-        return operators.mul(a, b)
+        c = a * b
+        return c
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
@@ -152,7 +153,7 @@ class Neg(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
         """Forward pass: compute the negation of input."""
-        return operators.neg(a)
+        return -a
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
@@ -173,8 +174,8 @@ class Sigmoid(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         """Backward pass: compute gradient with respect to input."""
-        (sigmoid_value,) = ctx.saved_values
-        return d_output * sigmoid_value * (1 - sigmoid_value)
+        sigma: float = ctx.saved_values[0]
+        return d_output * sigma * (1.0 - sigma)
 
 
 class ReLU(ScalarFunction):
@@ -206,8 +207,8 @@ class Exp(ScalarFunction):
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
         """Backward pass: compute gradient with respect to input."""
-        (exp_value,) = ctx.saved_values
-        return d_output * exp_value
+        out: float = ctx.saved_values[0]
+        return d_output * out
 
 
 class LT(ScalarFunction):
@@ -216,7 +217,7 @@ class LT(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
         """Forward pass: compute less-than comparison of inputs."""
-        return operators.lt(a, b)
+        return 1.0 if a < b else 0.0
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
@@ -230,7 +231,7 @@ class EQ(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
         """Forward pass: compute equality comparison of inputs."""
-        return operators.eq(a, b)
+        return 1.0 if a == b else 0.0
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
