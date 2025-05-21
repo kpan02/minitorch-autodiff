@@ -1,4 +1,11 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/7COonC5j)
+MiniTorch is a ground-up implementation of PyTorch, a popular deep learning framework used for building and training neural networks. The project was built from scratch as part of the Machine Learning Engineering course at Cornell Tech, taught by Professor Sasha Rush.
+
+**minitorch-autodiff**: This module adds automatic differentiation by constructing a computation graph over scalar operations. It implements forward and backward passes using the chain rule, allowing gradients to be computed for any scalar expression. This enables training of small neural networks using scalar-based gradient descent.
+
+
+
+
+
 # MiniTorch Module 1
 
 <img src="https://minitorch.github.io/minitorch.svg" width="50%">
